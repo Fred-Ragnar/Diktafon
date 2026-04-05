@@ -236,6 +236,7 @@ function getSupportedMimeType() {
 async function transcribeAudio(blob, mimeType) {
   if (!isTokenValid()) return;
   document.getElementById('typing-dots').classList.remove('hidden');
+  setStatus('saving', 'Behandler...');
   try {
     const base64 = await blobToBase64(blob);
     const encoding = mimeType.includes('ogg') ? 'OGG_OPUS' : 'WEBM_OPUS';
@@ -278,10 +279,14 @@ async function transcribeAudio(blob, mimeType) {
     }
   } catch (err) {
     console.error('Transkriberingsfeil:', err);
-    setStatus('error', 'Transkriberingsfeil');
     toast(`Feil: ${err.message}`, 'error');
   } finally {
     document.getElementById('typing-dots').classList.add('hidden');
+    if (state.isRecording) {
+      setStatus('recording', 'Lytter...');
+    } else {
+      setStatus('idle', 'Klar');
+    }
   }
 }
 
