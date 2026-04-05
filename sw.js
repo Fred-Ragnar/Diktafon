@@ -1,4 +1,4 @@
-const CACHE = 'diktafon-v6';
+const CACHE = 'diktafon-v7';
 const ASSETS = [
   './',
   './index.html',
