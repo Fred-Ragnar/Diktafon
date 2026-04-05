@@ -127,7 +127,7 @@ main {
 
 .doc-meta { font-size: 0.75rem; color: var(--text-secondary); white-space: nowrap; }
 
-.transcript-wrapper { position: relative; height: 180px; overflow-y: auto; }
+.transcript-wrapper { position: relative; flex: 1; min-height: 180px; overflow-y: auto; }
 
 .transcript {
   width: 100%;
