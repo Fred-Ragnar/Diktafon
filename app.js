@@ -332,6 +332,7 @@ function startWaveform(stream) {
   const MIN_H = 3 * window.devicePixelRatio;
 
   function draw() {
+    if (!state.isRecording) { stopWaveform(); return; }
     state.animationFrame = requestAnimationFrame(draw);
     state.analyser.getByteFrequencyData(dataArray);
     ctx.clearRect(0, 0, W, H);
