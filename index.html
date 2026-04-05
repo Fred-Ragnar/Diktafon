@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1a73e8">
+  <meta name="description" content="Dikter tekst direkte til Google Docs">
+  <title>Diktering</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+    <header>
+      <div class="header-left">
+        <div class="logo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/>
+            <line x1="8" y1="23" x2="16" y2="23"/>
+          </svg>
+        </div>
+        <h1>Diktafon</h1>
+      </div>
+      <div class="header-right">
+        <button id="auth-btn" class="btn btn-outline" onclick="handleAuth()">
+          <svg viewBox="0 0 24 24" width="18" height="18"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+          Logg inn
+        </button>
+        <div id="user-info" class="user-info hidden">
+          <span id="user-name"></span>
+          <button class="btn btn-ghost btn-sm" onclick="signOut()">Logg ut</button>
+        </div>
+      </div>
+    </header>
+
+    <main>
+      <div id="setup-warning" class="banner banner-warning hidden">
+        <strong>Konfigurasjon mangler:</strong> Sett inn din Google Client ID i <code>app.js</code> — se <a href="#" onclick="showSetupGuide()">oppsettguide</a>.
+      </div>
+
+      <div id="browser-warning" class="banner banner-warning hidden">
+        Tale-til-tekst krever Chrome eller Edge. <a href="https://www.google.com/chrome/" target="_blank">Last ned Chrome</a>.
+      </div>
+
+      <div class="editor-area">
+        <div class="doc-header">
+          <input
+            type="text"
+            id="doc-title"
+            class="doc-title-input"
+            placeholder="Dokumenttittel..."
+            value=""
+          />
+          <div class="doc-meta" id="doc-meta"></div>
+          <a id="open-doc-btn" class="btn btn-ghost btn-sm hidden" target="_blank" title="Åpne i Google Docs">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+              <polyline points="15 3 21 3 21 9"/>
+              <line x1="10" y1="14" x2="21" y2="3"/>
+            </svg>
+            Åpne i Docs
+          </a>
+        </div>
+
+        <div class="transcript-wrapper">
+          <div
+            id="transcript"
+            class="transcript"
+            contenteditable="true"
+            spellcheck="true"
+            data-placeholder="Trykk på mikrofon-knappen og begynn å snakke..."
+          ></div>
+          <div id="interim" class="interim">
+            <span id="typing-dots" class="typing-dots hidden">
+              <span></span><span></span><span></span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <!-- Mic alene øverst, sentrert -->
+        <div class="toolbar-row toolbar-row-mic">
+          <button id="record-btn" class="btn-record" onclick="toggleRecording()" title="Start/stopp diktering">
+            <div class="mic-icon">
+              <svg id="mic-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+                <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                <line x1="12" y1="19" x2="12" y2="23"/>
+                <line x1="8" y1="23" x2="16" y2="23"/>
+              </svg>
+            </div>
+            <span id="record-label">Start</span>
+          </button>
+        </div>
+
+        <!-- Waveform rett under mic -->
+        <canvas id="waveform-canvas" class="waveform-canvas hidden"></canvas>
+
+        <div class="toolbar-divider"></div>
+
+        <!-- Språk + Korrektur -->
+        <div class="toolbar-row toolbar-row-secondary">
+          <select id="lang-select" class="select" title="Dikteringsspråk" onchange="updateLang()">
+            <option value="nb-NO">Norsk (bokmål)</option>
+            <option value="nn-NO">Norsk (nynorsk)</option>
+            <option value="en-US">English (US)</option>
+            <option value="en-GB">English (UK)</option>
+            <option value="sv-SE">Svenska</option>
+            <option value="da-DK">Dansk</option>
+          </select>
+          <button id="korrektur-btn" class="btn btn-ghost" onclick="runKorrektur()" title="Korriger tekst med AI">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 20h9"/>
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+            </svg>
+            Korrektur
+          </button>
+        </div>
+
+        <div class="toolbar-divider"></div>
+
+        <!-- Handlingsknapper -->
+        <div class="toolbar-row toolbar-row-actions">
+          <button id="new-doc-btn" class="btn btn-primary" onclick="newDocument()" title="Nytt dokument">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="12" y1="11" x2="12" y2="17"/>
+              <line x1="9" y1="14" x2="15" y2="14"/>
+            </svg>
+            Nytt
+          </button>
+          <button id="clear-btn" class="btn btn-primary" onclick="clearTranscript()" title="Tøm tekst">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"/>
+              <path d="M19 6l-1 14H6L5 6"/>
+              <path d="M10 11v6M14 11v6"/>
+              <path d="M9 6V4h6v2"/>
+            </svg>
+            Tøm
+          </button>
+          <button id="notion-btn" class="btn btn-primary" onclick="exportToNotion()" title="Eksporter til Notion" disabled>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="3"/>
+              <path d="M7 7h5M7 12h8M7 17h5"/>
+            </svg>
+            Notion
+          </button>
+          <button id="rename-btn" class="btn btn-primary" onclick="openTitleDialog()" title="Endre filnavn">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 20h9"/>
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+            </svg>
+            Endre filnavn
+          </button>
+          <button id="save-btn" class="btn btn-primary" onclick="saveToGoogleDocs()" title="Lagre til Google Docs">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/>
+              <polyline points="7 3 7 8 15 8"/>
+            </svg>
+            <span id="save-label">Lagre</span>
+          </button>
+        </div>
+      </div>
+
+      <div id="status-bar" class="status-bar">
+        <div id="status-indicator" class="status-indicator status-idle">
+          <span class="status-dot"></span>
+          <span id="status-text">Klar</span>
+        </div>
+        <div id="word-count" class="word-count">0 ord</div>
+      </div>
+
+      <div id="notion-status" class="notion-status hidden">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0">
+          <rect x="3" y="3" width="18" height="18" rx="3"/>
+          <path d="M7 7h5M7 12h8M7 17h5"/>
+        </svg>
+        <span id="notion-status-text"></span>
+        <a id="open-notion-btn" href="#" target="_blank" class="btn btn-ghost btn-sm hidden" style="margin-left:auto;white-space:nowrap;">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+            <polyline points="15 3 21 3 21 9"/>
+            <line x1="10" y1="14" x2="21" y2="3"/>
+          </svg>
+          Åpne i Notion
+        </a>
+      </div>
+
+      <div class="mic-bar">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+          <line x1="12" y1="19" x2="12" y2="23"/>
+          <line x1="8" y1="23" x2="16" y2="23"/>
+        </svg>
+        <select id="mic-select" class="mic-select" title="Velg mikrofon" onchange="updateMic()">
+          <option value="">Mikrofon ikke valgt</option>
+        </select>
+      </div>
+    </main>
+  </div>
+
+  <!-- Setup guide modal -->
+  <div id="setup-modal" class="modal hidden">
+    <div class="modal-backdrop" onclick="closeSetupGuide()"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Oppsett — Google Cloud</h2>
+        <button class="btn-close" onclick="closeSetupGuide()">×</button>
+      </div>
+      <div class="modal-body">
+        <ol>
+          <li>Gå til <strong>console.cloud.google.com</strong></li>
+          <li>Opprett et nytt prosjekt</li>
+          <li>Aktiver <strong>Google Drive API</strong> og <strong>Google Docs API</strong></li>
+          <li>Gå til <em>APIs &amp; Services → Credentials</em></li>
+          <li>Klikk <strong>Create Credentials → OAuth client ID</strong></li>
+          <li>Velg type: <strong>Web application</strong></li>
+          <li>Under <em>Authorised JavaScript origins</em>, legg til adressen appen kjører på (f.eks. <code>http://localhost:8080</code> eller din HTTPS-domene)</li>
+          <li>Kopier <strong>Client ID</strong></li>
+          <li>Åpne <code>app.js</code> og erstatt <code>DIN_CLIENT_ID_HER</code> med din Client ID</li>
+        </ol>
+        <div class="info-box">
+          <strong>Merk:</strong> Appen lagrer kun filer den selv oppretter (begrenset tilgang). Den leser ikke andre filer i Google Drive.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Felles tittel-dialog -->
+  <div id="title-modal" class="modal hidden">
+    <div class="modal-backdrop" onclick="cancelTitleDialog()"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="title-modal-heading">Filnavn</h2>
+        <button class="btn-close" onclick="cancelTitleDialog()">×</button>
+      </div>
+      <div class="modal-body">
+        <p style="color:var(--text-secondary);font-size:.875rem;margin-bottom:12px;">Foreslått av AI — rediger om ønskelig:</p>
+        <input type="text" id="title-modal-input" class="doc-title-input" style="border:1.5px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 14px;width:100%;font-size:1rem;" placeholder="Tittel..."/>
+        <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end;">
+          <button class="btn btn-ghost" onclick="cancelTitleDialog()">Avbryt</button>
+          <button id="title-modal-confirm" class="btn btn-primary" onclick="confirmTitleDialog()">Bekreft</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notion tittel-dialog -->
+  <div id="notion-title-modal" class="modal hidden">
+    <div class="modal-backdrop" onclick="cancelNotionExport()"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Tittel i Notion</h2>
+        <button class="btn-close" onclick="cancelNotionExport()">×</button>
+      </div>
+      <div class="modal-body">
+        <p style="color:var(--text-secondary);font-size:.875rem;margin-bottom:12px;">Foreslått av AI — rediger om ønskelig:</p>
+        <input type="text" id="notion-title-input" class="doc-title-input" style="border:1.5px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 14px;width:100%;font-size:1rem;" placeholder="Tittel..."/>
+        <div style="display:flex;gap:10px;margin-top:18px;justify-content:flex-end;">
+          <button class="btn btn-ghost" onclick="cancelNotionExport()">Avbryt</button>
+          <button class="btn btn-primary" onclick="confirmNotionExport()">Eksporter til Notion</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast notifications -->
+  <div id="toast-container"></div>
+
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script src="app.js"></script>
+</body>
+</html>
