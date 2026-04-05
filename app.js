@@ -213,7 +213,11 @@ function startRecordingSegment() {
     const blob = new Blob(state.audioChunks, { type: mimeType });
     state.audioChunks = [];
     if (blob.size > 2000) await transcribeAudio(blob, mimeType);
-    if (state.isRecording) startRecordingSegment();
+    if (state.isRecording) {
+      startRecordingSegment();
+    } else {
+      setStatus('idle', 'Klar');
+    }
   };
 
   state.mediaRecorder.start();
