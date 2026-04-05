@@ -5,7 +5,6 @@
 // ============================================================
 const CONFIG = {
   clientId: '1041011201222-v3o22i3dvmbjc85gfod20m699a64jgdk.apps.googleusercontent.com',
-  geminiApiKey: 'AIzaSyDAUClA4Zy1OyMFlv7xCs_aMbA_85n9ATg',
   notionDatabaseId: '02d1059e72f0461b97df4afdf034a1ec',
   scopes: [
     'https://www.googleapis.com/auth/drive.file',
@@ -849,17 +848,14 @@ async function doNotionExport(title) {
 async function suggestTitle(text) {
   try {
     const preview = text.slice(0, 1000);
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${CONFIG.geminiApiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: `Lag en kort, beskrivende tittel (maks 8 ord) på norsk for dette notatet. Returner kun tittelen, ingen anførselsmerker eller punktum:\n\n${preview}` }] }],
-          generationConfig: { temperature: 0.4 },
-        }),
-      }
-    );
+    const res = await fetch('/api/gemini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt: `Lag en kort, beskrivende tittel (maks 8 ord) på norsk for dette notatet. Returner kun tittelen, ingen anførselsmerker eller punktum:\n\n${preview}`,
+        temperature: 0.4,
+      }),
+    });
     const data = await res.json();
     const suggested = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
     if (suggested) return suggested;
@@ -880,23 +876,14 @@ async function runKorrektur() {
   setStatus('saving', 'Korrektur...');
 
   try {
-    const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${CONFIG.geminiApiKey}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: `Du er en norsk korrekturleser. Rett opp skrivefeil, fiks tegnsetting og gjør teksten helhetlig og lesbar. Behold meningen og innholdet nøyaktig. Returner kun den korrigerte teksten, uten kommentarer eller forklaringer.\n\n${text}`
-            }]
-          }],
-          generationConfig: { temperature: 0.1 },
-        }),
-      }
-    );
+    const res = await fetch('/api/gemini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        prompt: `Du er en norsk korrekturleser. Rett opp skrivefeil, fiks tegnsetting og gjør teksten helhetlig og lesbar. Behold meningen og innholdet nøyaktig. Returner kun den korrigerte teksten, uten kommentarer eller forklaringer.\n\n${text}`,
+        temperature: 0.1,
+      }),
+    });
 
     const data = await res.json();
     if (data.error) throw new Error(data.error.message);
