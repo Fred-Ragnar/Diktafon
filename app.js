@@ -589,17 +589,22 @@ async function saveToGoogleDocs(isAutoSave = false) {
     }
 
     const now = new Date();
-    setStatus('saved', `Lagret ${now.toLocaleTimeString('nb-NO', { hour:'2-digit', minute:'2-digit' })}`);
     document.getElementById('doc-meta').textContent = `Lagret ${formatDateTime(now)}`;
     updateOpenDocButton();
     document.getElementById('notion-btn').disabled = false;
+
+    if (state.isRecording) {
+      setStatus('recording', 'Lytter...');
+    } else {
+      setStatus('saved', `Lagret ${now.toLocaleTimeString('nb-NO', { hour:'2-digit', minute:'2-digit' })}`);
+    }
 
     if (!isAutoSave) {
       toast(`Lagret i Google Docs`, 'success');
     }
   } catch (err) {
     console.error('Lagringsfeil:', err);
-    setStatus('error', 'Lagring feilet');
+    if (!state.isRecording) setStatus('error', 'Lagring feilet');
     toast(`Lagring feilet: ${err.message}`, 'error');
   } finally {
     document.getElementById('save-label').textContent = 'Lagre til Drive';
