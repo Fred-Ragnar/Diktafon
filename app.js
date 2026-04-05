@@ -549,7 +549,6 @@ function updateSaveButton() {
 //  Google Docs / Drive API
 // ============================================================
 async function saveToGoogleDocs(isAutoSave = false) {
-  alert(`[DEBUG save] currentDocId=${state.currentDocId}, tokenValid=${isTokenValid()}`);
   if (!isTokenValid()) {
     if (CONFIG.clientId === 'DIN_CLIENT_ID_HER') {
       showSetupGuide();
@@ -607,7 +606,6 @@ async function getDiktafonFolderId() {
   const q = encodeURIComponent("name='_Diktafon' and mimeType='application/vnd.google-apps.folder' and trashed=false");
   const res = await apiFetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id,name)`);
   const data = await res.json();
-  alert(`[DEBUG søk] ${JSON.stringify(data).slice(0, 300)}`);
   if (data.error) {
     toast(`Mappe-søk feilet: ${data.error.message}`, 'error');
     return null;
@@ -625,7 +623,6 @@ async function getDiktafonFolderId() {
     }),
   });
   const folder = await createRes.json();
-  alert(`[DEBUG opprett] ${JSON.stringify(folder).slice(0, 300)}`);
   if (folder.error) {
     toast(`Kunne ikke opprette _Diktafon-mappe: ${folder.error.message}`, 'error');
     return null;
