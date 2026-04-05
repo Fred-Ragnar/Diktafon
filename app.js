@@ -188,6 +188,9 @@ async function startRecording() {
     toast('Mikrofontilgang ble avslått.', 'error');
     return;
   }
+  if (!document.getElementById('doc-title').value.trim()) {
+    document.getElementById('doc-title').value = makeDocTitle();
+  }
   state.isRecording = true;
   document.getElementById('record-btn').classList.add('recording');
   document.getElementById('record-label').textContent = 'Stopp';
@@ -407,7 +410,8 @@ function clearTranscript() {
   updateWordCount();
   setStatus('idle', 'Klar');
   document.getElementById('doc-meta').textContent = '';
-  setDefaultDocTitle();
+  document.getElementById('doc-title').value = '';
+  state.userSetTitle = false;
   toast('Tekst slettet');
 }
 
