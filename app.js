@@ -202,28 +202,30 @@ async function startRecording() {
 function startRecordingSegment() {
   if (!state.isRecording || !state.mediaStream) return;
   const mimeType = getSupportedMimeType();
-  state.mediaRecorder = new MediaRecorder(state.mediaStream, { mimeType });
+  const recorder = new MediaRecorder(state.mediaStream, { mimeType });
+  state.mediaRecorder = recorder;
   state.audioChunks = [];
 
-  state.mediaRecorder.ondataavailable = (e) => {
+  recorder.ondataavailable = (e) => {
     if (e.data.size > 0) state.audioChunks.push(e.data);
   };
 
-  state.mediaRecorder.onstop = async () => {
+  recorder.onstop = async () => {
     const blob = new Blob(state.audioChunks, { type: mimeType });
     state.audioChunks = [];
-    if (blob.size > 2000) await transcribeAudio(blob, mimeType);
     if (state.isRecording) {
       startRecordingSegment();
-    } else {
+    }
+    if (blob.size > 2000) await transcribeAudio(blob, mimeType);
+    if (!state.isRecording) {
       setStatus('idle', 'Klar');
     }
   };
 
-  state.mediaRecorder.start();
+  recorder.start();
   setTimeout(() => {
-    if (state.mediaRecorder && state.mediaRecorder.state === 'recording') {
-      state.mediaRecorder.stop();
+    if (recorder.state === 'recording') {
+      recorder.stop();
     }
   }, SEGMENT_MS);
 }
@@ -236,7 +238,7 @@ function getSupportedMimeType() {
 async function transcribeAudio(blob, mimeType) {
   if (!isTokenValid()) return;
   document.getElementById('typing-dots').classList.remove('hidden');
-  setStatus('saving', 'Behandler...');
+  if (!state.isRecording) setStatus('saving', 'Behandler...');
   try {
     const base64 = await blobToBase64(blob);
     const encoding = mimeType.includes('ogg') ? 'OGG_OPUS' : 'WEBM_OPUS';
