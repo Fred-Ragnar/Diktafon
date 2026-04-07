@@ -108,12 +108,22 @@ function saveSession() {
 function restoreSession() {
   try {
     const draft = sessionStorage.getItem('diktering_draft');
-
     if (draft) {
       state.finalText = draft;
       document.getElementById('transcript').innerText = draft;
     }
-    // Tittel og docId gjenopprettes ikke — genereres alltid på nytt ved oppstart
+
+    // Gjenopprett token hvis det fortsatt er gyldig
+    const token = sessionStorage.getItem('diktering_token');
+    const expiry = sessionStorage.getItem('diktering_token_expiry');
+    if (token && expiry && Date.now() < parseInt(expiry)) {
+      state.accessToken = token;
+      state.tokenExpiry = parseInt(expiry);
+      const userName = sessionStorage.getItem('diktering_user_name');
+      if (userName) document.getElementById('user-name').textContent = userName;
+      document.getElementById('user-info').classList.remove('hidden');
+      document.getElementById('auth-btn').classList.add('hidden');
+    }
   } catch (_) {}
 }
 
@@ -513,6 +523,8 @@ function onTokenReceived(response) {
   }
   state.accessToken = response.access_token;
   state.tokenExpiry = Date.now() + (response.expires_in - 60) * 1000;
+  sessionStorage.setItem('diktering_token', state.accessToken);
+  sessionStorage.setItem('diktering_token_expiry', String(state.tokenExpiry));
 
   // Hent brukerinfo
   fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
@@ -520,10 +532,12 @@ function onTokenReceived(response) {
   })
     .then(r => r.json())
     .then(info => {
-      document.getElementById('user-name').textContent = info.name || info.email;
+      const displayName = info.name || info.email;
+      sessionStorage.setItem('diktering_user_name', displayName);
+      document.getElementById('user-name').textContent = displayName;
       document.getElementById('user-info').classList.remove('hidden');
       document.getElementById('auth-btn').classList.add('hidden');
-      toast(`Logget inn som ${info.name || info.email}`);
+      toast(`Logget inn som ${displayName}`);
       updateSaveButton();
     })
     .catch(() => {
@@ -541,6 +555,9 @@ function signOut() {
   state.tokenExpiry = null;
   state.currentDocId = null;
   sessionStorage.removeItem('diktering_docId');
+  sessionStorage.removeItem('diktering_token');
+  sessionStorage.removeItem('diktering_token_expiry');
+  sessionStorage.removeItem('diktering_user_name');
   document.getElementById('user-info').classList.add('hidden');
   document.getElementById('auth-btn').classList.remove('hidden');
   toast('Logget ut');
