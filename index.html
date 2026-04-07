@@ -143,6 +143,14 @@
             </svg>
             Tøm
           </button>
+          <button id="save-btn" class="btn btn-primary" onclick="saveToGoogleDocs()" title="Lagre til Google Docs">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+              <polyline points="17 21 17 13 7 13 7 21"/>
+              <polyline points="7 3 7 8 15 8"/>
+            </svg>
+            <span id="save-label">Lagre</span>
+          </button>
           <button id="korrektur-btn" class="btn btn-ghost" onclick="openKorrekturModal()" title="Korriger tekst med AI">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M12 20h9"/>
@@ -156,14 +164,6 @@
               <path d="M7 7h5M7 12h8M7 17h5"/>
             </svg>
             Notion
-          </button>
-          <button id="save-btn" class="btn btn-primary" onclick="saveToGoogleDocs()" title="Lagre til Google Docs">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-              <polyline points="17 21 17 13 7 13 7 21"/>
-              <polyline points="7 3 7 8 15 8"/>
-            </svg>
-            <span id="save-label">Lagre</span>
           </button>
         </div>
       </div>

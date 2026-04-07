@@ -651,7 +651,7 @@ async function saveToGoogleDocs(isAutoSave = false) {
     if (!state.isRecording) setStatus('error', 'Lagring feilet');
     toast(`Lagring feilet: ${err.message}`, 'error');
   } finally {
-    document.getElementById('save-label').textContent = 'Lagre til Drive';
+    document.getElementById('save-label').textContent = 'Lagre';
     document.getElementById('save-btn').disabled = false;
   }
 }
