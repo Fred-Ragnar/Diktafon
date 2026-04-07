@@ -122,6 +122,7 @@ h1 { font-size: 1.15rem; font-weight: 600; color: var(--text-primary); }
 }
 .korrektur-option strong { font-size: 0.95rem; font-weight: 600; }
 .korrektur-option span { font-size: 0.8rem; color: var(--text-secondary); }
+.korrektur-divider { height: 1px; background: rgba(255,255,255,.06); margin: 2px 0; }
 
 .profile-lang { display: flex; flex-direction: column; gap: 5px; }
 .profile-lang-label { font-size: 0.75rem; color: var(--text-secondary); }
