@@ -981,6 +981,7 @@ Returner kun den ferdig redigerte teksten, uten kommentarer eller forklaringer.\
 
   const btn = document.getElementById('korrektur-btn');
   btn.disabled = true;
+  document.getElementById('typing-dots').classList.remove('hidden');
   setStatus('saving', type === 'renskriving' ? 'Renskriver...' : 'Korrektur...');
 
   try {
@@ -1007,6 +1008,7 @@ Returner kun den ferdig redigerte teksten, uten kommentarer eller forklaringer.\
     setStatus('error', 'Korrektur feilet');
     toast(`Korrektur feilet: ${err.message}`, 'error');
   } finally {
+    document.getElementById('typing-dots').classList.add('hidden');
     btn.disabled = false;
   }
 }
