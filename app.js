@@ -283,9 +283,7 @@ async function transcribeAudio(blob, mimeType) {
       .trim();
 
     if (transcript) {
-      const separator = (state.finalText && !state.finalText.endsWith('\n')) ? ' ' : '';
-      state.finalText += separator + transcript;
-      renderTranscript();
+      insertTranscriptText(transcript);
       updateWordCount();
       scheduleAutoSave();
     }
@@ -390,6 +388,38 @@ function stopWaveform() {
   canvas.classList.add('hidden');
   const ctx = canvas.getContext('2d');
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function insertTranscriptText(text) {
+  const el = document.getElementById('transcript');
+  const sel = window.getSelection();
+
+  if (sel && sel.rangeCount > 0 && el.contains(sel.anchorNode)) {
+    // Sett inn ved markørposisjon
+    const range = sel.getRangeAt(0);
+    const startContainer = range.startContainer;
+    const textBefore = startContainer.nodeType === Node.TEXT_NODE
+      ? startContainer.textContent.slice(0, range.startOffset)
+      : '';
+    const separator = textBefore.length > 0 && !/\s$/.test(textBefore) ? ' ' : '';
+
+    range.deleteContents();
+    const node = document.createTextNode(separator + text);
+    range.insertNode(node);
+
+    const newRange = document.createRange();
+    newRange.setStartAfter(node);
+    newRange.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(newRange);
+
+    state.finalText = el.innerText;
+  } else {
+    // Ingen markør i teksten — legg til på slutten
+    const separator = (state.finalText && !state.finalText.endsWith('\n')) ? ' ' : '';
+    state.finalText += separator + text;
+    renderTranscript();
+  }
 }
 
 function renderTranscript() {
