@@ -418,6 +418,14 @@ function updateWordCount() {
   const text = state.finalText.trim();
   const count = text ? text.split(/\s+/).length : 0;
   document.getElementById('word-count').textContent = `${count} ord`;
+  updateKorrekturButton();
+}
+
+function updateKorrekturButton() {
+  const btn = document.getElementById('korrektur-btn');
+  const hasText = state.finalText.trim().length > 0;
+  btn.classList.toggle('btn-primary', hasText);
+  btn.classList.toggle('btn-ghost', !hasText);
 }
 
 function clearTranscript() {

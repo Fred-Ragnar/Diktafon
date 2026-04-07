@@ -97,6 +97,10 @@ h1 { font-size: 1.15rem; font-weight: 600; color: var(--text-primary); }
 
 .profile-name { font-size: 0.875rem; color: var(--text-secondary); white-space: nowrap; }
 
+.profile-lang { display: flex; flex-direction: column; gap: 5px; }
+.profile-lang-label { font-size: 0.75rem; color: var(--text-secondary); }
+.profile-lang-select { height: 34px; font-size: 0.8rem; width: 100%; }
+
 /* ===== Main ===== */
 main {
   flex: 1;

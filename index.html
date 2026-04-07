@@ -39,6 +39,17 @@
             </button>
             <div id="profile-menu" class="profile-menu hidden">
               <span id="user-name" class="profile-name"></span>
+              <div class="profile-lang">
+                <label class="profile-lang-label">Dikteringsspråk</label>
+                <select id="lang-select" class="select profile-lang-select" onchange="updateLang()">
+                  <option value="nb-NO">Norsk (bokmål)</option>
+                  <option value="nn-NO">Norsk (nynorsk)</option>
+                  <option value="en-US">English (US)</option>
+                  <option value="en-GB">English (UK)</option>
+                  <option value="sv-SE">Svenska</option>
+                  <option value="da-DK">Dansk</option>
+                </select>
+              </div>
               <button class="btn btn-ghost btn-sm" onclick="signOut()">Logg ut</button>
             </div>
           </div>
@@ -112,27 +123,6 @@
 
         <div class="toolbar-divider"></div>
 
-        <!-- Språk + Korrektur -->
-        <div class="toolbar-row toolbar-row-secondary">
-          <select id="lang-select" class="select" title="Dikteringsspråk" onchange="updateLang()">
-            <option value="nb-NO">Norsk (bokmål)</option>
-            <option value="nn-NO">Norsk (nynorsk)</option>
-            <option value="en-US">English (US)</option>
-            <option value="en-GB">English (UK)</option>
-            <option value="sv-SE">Svenska</option>
-            <option value="da-DK">Dansk</option>
-          </select>
-          <button id="korrektur-btn" class="btn btn-ghost" onclick="runKorrektur()" title="Korriger tekst med AI">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 20h9"/>
-              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-            </svg>
-            Korrektur
-          </button>
-        </div>
-
-        <div class="toolbar-divider"></div>
-
         <!-- Handlingsknapper -->
         <div class="toolbar-row toolbar-row-actions">
           <button id="new-doc-btn" class="btn btn-primary" onclick="newDocument()" title="Nytt dokument">
@@ -152,6 +142,13 @@
               <path d="M9 6V4h6v2"/>
             </svg>
             Tøm
+          </button>
+          <button id="korrektur-btn" class="btn btn-ghost" onclick="runKorrektur()" title="Korriger tekst med AI">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 20h9"/>
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+            </svg>
+            Korrektur
           </button>
           <button id="notion-btn" class="btn btn-primary" onclick="exportToNotion()" title="Eksporter til Notion" disabled>
             <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
