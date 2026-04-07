@@ -922,25 +922,42 @@ async function suggestTitle(text) {
 }
 
 // ============================================================
-//  Korrektur (Gemini AI)
+//  Korriger (Gemini AI)
 // ============================================================
-async function runKorrektur() {
+function openKorrekturModal() {
   const text = state.finalText.trim();
   if (!text) { toast('Ingen tekst å korrigere.'); return; }
   if (!isTokenValid()) { toast('Logg inn med Google først.', 'error'); handleAuth(); return; }
+  document.getElementById('korrektur-modal').classList.remove('hidden');
+}
+
+function closeKorrekturModal() {
+  document.getElementById('korrektur-modal').classList.add('hidden');
+}
+
+async function runKorrektur(type) {
+  closeKorrekturModal();
+  const text = state.finalText.trim();
+
+  const prompts = {
+    korrektur: `Du er en norsk korrekturleser. Rett opp skrivefeil, fiks tegnsetting og gjør teksten helhetlig og lesbar. Behold meningen og innholdet nøyaktig. Returner kun den korrigerte teksten, uten kommentarer eller forklaringer.\n\n${text}`,
+    renskriving: `Du er en norsk tekstredaktør. Gjør følgende med teksten:
+1. Rett opp alle skrivefeil og fiks tegnsetting
+2. Fjern åpenbart unødige ord og talespråklige utfyllingsord som "eh", "øh", "ol", "liksom", "på en måte" og lignende
+3. Rett opp ulogisk og usammenhengende tekst, og organiser innholdet logisk
+4. Behold det opprinnelige innholdet og meningen
+Returner kun den ferdig redigerte teksten, uten kommentarer eller forklaringer.\n\n${text}`,
+  };
 
   const btn = document.getElementById('korrektur-btn');
   btn.disabled = true;
-  setStatus('saving', 'Korrektur...');
+  setStatus('saving', type === 'renskriving' ? 'Renskriver...' : 'Korrektur...');
 
   try {
     const res = await fetch('/api/gemini', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        prompt: `Du er en norsk korrekturleser. Rett opp skrivefeil, fiks tegnsetting og gjør teksten helhetlig og lesbar. Behold meningen og innholdet nøyaktig. Returner kun den korrigerte teksten, uten kommentarer eller forklaringer.\n\n${text}`,
-        temperature: 0.1,
-      }),
+      body: JSON.stringify({ prompt: prompts[type], temperature: 0.1 }),
     });
 
     const data = await res.json();
@@ -954,7 +971,7 @@ async function runKorrektur() {
     updateWordCount();
     scheduleAutoSave();
     setStatus('idle', 'Klar');
-    toast('Korrektur fullført', 'success');
+    toast(type === 'renskriving' ? 'Renskriving fullført' : 'Korrektur fullført', 'success');
   } catch (err) {
     console.error('Korrekturfeil:', err);
     setStatus('error', 'Korrektur feilet');

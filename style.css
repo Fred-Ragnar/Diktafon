@@ -97,6 +97,32 @@ h1 { font-size: 1.15rem; font-weight: 600; color: var(--text-primary); }
 
 .profile-name { font-size: 0.875rem; color: var(--text-secondary); white-space: nowrap; }
 
+/* ===== Korriger-modal ===== */
+.korrektur-options { display: flex; flex-direction: column; gap: 10px; }
+
+.korrektur-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+  padding: 14px 18px;
+  background: var(--bg-input);
+  border: 1.5px solid rgba(255,255,255,.08);
+  border-radius: var(--radius-btn);
+  cursor: pointer;
+  text-align: left;
+  transition: all var(--transition);
+  font-family: inherit;
+  color: var(--text-primary);
+  width: 100%;
+}
+.korrektur-option:hover {
+  border-color: var(--accent-primary);
+  background: rgba(43,186,121,.08);
+}
+.korrektur-option strong { font-size: 0.95rem; font-weight: 600; }
+.korrektur-option span { font-size: 0.8rem; color: var(--text-secondary); }
+
 .profile-lang { display: flex; flex-direction: column; gap: 5px; }
 .profile-lang-label { font-size: 0.75rem; color: var(--text-secondary); }
 .profile-lang-select { height: 34px; font-size: 0.8rem; width: 100%; }
