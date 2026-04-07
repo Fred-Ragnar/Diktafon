@@ -551,6 +551,18 @@ function isTokenValid() {
   return state.accessToken && state.tokenExpiry && Date.now() < state.tokenExpiry;
 }
 
+function toggleProfileMenu() {
+  document.getElementById('profile-menu').classList.toggle('hidden');
+}
+
+document.addEventListener('click', (e) => {
+  const wrapper = document.getElementById('profile-btn')?.closest('.profile-wrapper');
+  const menu = document.getElementById('profile-menu');
+  if (menu && !menu.classList.contains('hidden') && wrapper && !wrapper.contains(e.target)) {
+    menu.classList.add('hidden');
+  }
+});
+
 function updateSaveButton() {
   const btn = document.getElementById('save-btn');
   if (state.accessToken && isTokenValid()) {
