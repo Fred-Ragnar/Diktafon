@@ -212,7 +212,14 @@ async function startRecording() {
 function startRecordingSegment() {
   if (!state.isRecording || !state.mediaStream) return;
   const mimeType = getSupportedMimeType();
-  const recorder = new MediaRecorder(state.mediaStream, { mimeType });
+  let recorder;
+  try {
+    recorder = new MediaRecorder(state.mediaStream, { mimeType });
+  } catch (err) {
+    console.error('Kunne ikke starte MediaRecorder:', err);
+    stopRecording();
+    return;
+  }
   state.mediaRecorder = recorder;
   state.audioChunks = [];
 
@@ -220,19 +227,38 @@ function startRecordingSegment() {
     if (e.data.size > 0) state.audioChunks.push(e.data);
   };
 
-  recorder.onstop = async () => {
-    const blob = new Blob(state.audioChunks, { type: mimeType });
-    state.audioChunks = [];
+  recorder.onerror = (e) => {
+    console.error('MediaRecorder feil:', e);
     if (state.isRecording) {
-      startRecordingSegment();
-    }
-    if (blob.size > 2000) await transcribeAudio(blob, mimeType);
-    if (!state.isRecording) {
-      setStatus('idle', 'Klar');
+      // Forsøk å starte nytt segment etter en kort pause
+      setTimeout(() => { if (state.isRecording) startRecordingSegment(); }, 200);
     }
   };
 
-  recorder.start();
+  recorder.onstop = async () => {
+    try {
+      const blob = new Blob(state.audioChunks, { type: mimeType });
+      state.audioChunks = [];
+      if (state.isRecording) {
+        startRecordingSegment();
+      }
+      if (blob.size > 2000) await transcribeAudio(blob, mimeType);
+    } catch (err) {
+      console.error('Feil i opptak-segment:', err);
+    } finally {
+      if (!state.isRecording) {
+        setStatus('idle', 'Klar');
+      }
+    }
+  };
+
+  try {
+    recorder.start();
+  } catch (err) {
+    console.error('recorder.start() feilet:', err);
+    stopRecording();
+    return;
+  }
   setTimeout(() => {
     if (recorder.state === 'recording') {
       recorder.stop();
@@ -254,25 +280,34 @@ async function transcribeAudio(blob, mimeType) {
     const encoding = mimeType.includes('ogg') ? 'OGG_OPUS' : 'WEBM_OPUS';
     const lang = document.getElementById('lang-select').value;
 
-    const res = await fetch('https://speech.googleapis.com/v1/speech:recognize', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${state.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        config: {
-          encoding,
-          languageCode: lang,
-          enableAutomaticPunctuation: true,
-          model: 'latest_long',
-          useEnhanced: true,
-          profanityFilter: false,
-          enableWordConfidence: false,
+    const abortController = new AbortController();
+    const fetchTimeout = setTimeout(() => abortController.abort(), 30000);
+
+    let res;
+    try {
+      res = await fetch('https://speech.googleapis.com/v1/speech:recognize', {
+        method: 'POST',
+        signal: abortController.signal,
+        headers: {
+          'Authorization': `Bearer ${state.accessToken}`,
+          'Content-Type': 'application/json',
         },
-        audio: { content: base64 },
-      }),
-    });
+        body: JSON.stringify({
+          config: {
+            encoding,
+            languageCode: lang,
+            enableAutomaticPunctuation: true,
+            model: 'latest_long',
+            useEnhanced: true,
+            profanityFilter: false,
+            enableWordConfidence: false,
+          },
+          audio: { content: base64 },
+        }),
+      });
+    } finally {
+      clearTimeout(fetchTimeout);
+    }
 
     const data = await res.json();
     if (data.error) throw new Error(data.error.message);
@@ -289,7 +324,9 @@ async function transcribeAudio(blob, mimeType) {
     }
   } catch (err) {
     console.error('Transkriberingsfeil:', err);
-    toast(`Feil: ${err.message}`, 'error');
+    if (err.name !== 'AbortError') {
+      toast(`Feil: ${err.message}`, 'error');
+    }
   } finally {
     document.getElementById('typing-dots').classList.add('hidden');
     if (state.isRecording) {
