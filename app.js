@@ -500,7 +500,6 @@ function clearTranscript() {
   if (!confirm('Slette all tekst?')) return;
   state.finalText = '';
   document.getElementById('transcript').innerText = '';
-  document.getElementById('interim').textContent = '';
   state.currentDocId = null;
   sessionStorage.removeItem('diktering_docId');
   sessionStorage.removeItem('diktering_draft');
@@ -526,7 +525,6 @@ async function newDocument() {
   state.currentDocId = null;
   state.currentDocTitle = null;
   document.getElementById('transcript').innerText = '';
-  document.getElementById('interim').textContent = '';
   document.getElementById('doc-meta').textContent = '';
   sessionStorage.removeItem('diktering_docId');
   sessionStorage.removeItem('diktering_draft');
